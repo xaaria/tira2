@@ -1,19 +1,18 @@
-import com.sun.deploy.util.ArrayUtil;
-import sun.awt.image.ImageWatched;
-
-import javax.sound.midi.SysexMessage;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
-public class Main {
+
+public class Algo1_4 {
+
 
 
   public static void main(String[] args) throws IOException {
 
     if(args.length == 0) {
+      System.out.print("Filename is missing!");
       return;
     }
 
@@ -27,7 +26,7 @@ public class Main {
       // Read each line
       for (String line = br.readLine(); line != null; line = br.readLine()) {
 
-        System.out.print(line + "\n");
+        //System.out.print(line + "\n");
         String[] n = line.split(" "); // [x, y]
 
         Node n1 = new Node(Integer.parseInt(n[0]));
@@ -46,9 +45,9 @@ public class Main {
       e.printStackTrace();
     }
 
-    // Print graph structure
-    //System.out.println( g.toString() );
-    System.out.println( g.isBipartite() );
+    // Run
+    g.isBipartite();
+    System.out.print("\n"); // program must end in a newline char
 
   }
 
@@ -62,15 +61,9 @@ public class Main {
       this.nodes = new HashMap<>();
     }
 
-    public boolean hasNode(Node n) {
-      return this.nodes.containsKey(n);
-    }
-
     public void addToGraph(Node n) {
       if(!this.nodes.containsKey(n)) {
         this.nodes.put(n, new HashSet<>());
-      } else {
-        System.out.print("Key was already in a graph!\n");
       }
     }
 
@@ -79,26 +72,25 @@ public class Main {
       return this.nodes.get(n).toArray(new Node[this.nodes.get(n).size()]);
     }
 
-
     public boolean isBipartite() {
       BipartiteGraph bg = new BipartiteGraph(this);
-      boolean r = bg.isBipartite();
+      bg.run();
       bg.printResults();
-      return r;
+      return bg.isBipartite;
     }
-
-
-    public int getNumberOfComponents() {
-      return 1;
-    }
-
 
 
 
     // inner class
-    class BipartiteGraph {
+    static class BipartiteGraph {
+
+      // TODO: add clear method that clears the state
 
       private Graph g_;
+      private int components;
+      public boolean isBipartite = false;
+
+      private final LinkedList<Node> unchecked = new LinkedList<>();
       private final HashSet<Node> setOne = new HashSet<>(); // blue 0
       private final HashSet<Node> setTwo = new HashSet<>(); // white 1
 
@@ -107,9 +99,15 @@ public class Main {
 
       public BipartiteGraph(Graph g) {
         this.g_ = g;
+        this.components = 0;
       }
 
-      public void printResults() {
+      public void run() {
+        isBipartite = this.isGraphBipartite();
+      }
+
+      // This is the main function
+      private boolean printResults() {
 
         // Blue set contains the smallest node
         ArrayList<Node> blue = new ArrayList<>( setOne );
@@ -124,8 +122,8 @@ public class Main {
           white = tmp;
         }
 
-        if(this.isBipartite()) {
-          System.out.println(String.format("The graph has %d component(s)", getNumberOfComponents()));
+        if(isBipartite) {
+          System.out.println(String.format("The graph has %d component(s)", this.components));
           System.out.println("The graph is bipartite");
 
           System.out.print(String.format("%s:", SET_ONE));
@@ -137,19 +135,49 @@ public class Main {
           for( Node n : white ) {
             System.out.print( " " + n.number );
           }
+
+        } else {
+          System.out.println(String.format("The graph has %d component(s)", this.components));
+          System.out.println("The graph is not bipartite");
         }
+
+        return isBipartite;
       }
 
 
+      /**
+       * Check if entire Graph is bipartite
+       * @return boolean
+       */
+      private boolean isGraphBipartite() {
 
-      public boolean isBipartite() {
+        // Store all nodes as unchecked here and pick 1. as a root node
+        // When in isBipartite(), remove all nodes that are accessed at least once
+        // Every time we return from it AND we still have unchecked nodes in entire graph
+        // we know that there are in separate sub-graphs
+        // then continue. raise components+1.
+        // If any isBipartite() returns false, the entire graph can't be bipartite
+        this.unchecked.addAll( this.g_.nodes.keySet() );
+
+        Node root = unchecked.poll();
+        while(root != null) {
+          this.components++;
+          if(!isBipartite(root)) {
+            return false; // if any fails, entire graph is not bipartite
+          }
+          root = unchecked.poll();
+        }
+        return true;
+
+      }
+
+      /**
+       * Checks if graph is bipartite from given root Node.
+       */
+      private boolean isBipartite(Node root) {
 
         // Trivial check
         if(this.g_.nodes.size() <= 1) { return true; }
-
-        setOne.clear(); setTwo.clear();
-
-        Node[] nodes = this.g_.nodes.keySet().toArray(new Node[this.g_.nodes.size()]); // order not defined
 
         LinkedList<Node> q = new LinkedList<>();    // Queue of unchecked nodes
         HashSet<Node> discovered = new HashSet<>(); // Checked nodes
@@ -158,20 +186,23 @@ public class Main {
 
         // BEGIN:
 
-        q.add(nodes[0]); // Add root node, random
+        q.add(root); // Add root node
 
         while(!q.isEmpty()) {
 
           Node tn = q.poll();
-          discovered.add(tn);
+          discovered.add(tn);         // local discovered
+          this.unchecked.remove(tn);  // global
+
           if( setOne.contains(tn) ) { color = 0; } else { color = 1; } // Get target node's color
-          System.out.println( "Target Node: " + tn + " | color: " + color );
+          //System.out.println( "Target Node: " + tn + " | color: " + color );
 
           if(color == 0) { setOne.add(tn); } else { setTwo.add(tn); } // add node itself to a colored set
 
           for(Node n_ : this.g_.getNeighbours(tn)) {
             if(!discovered.contains(n_)) {
               discovered.add(n_);
+              this.unchecked.remove(n_);
               q.add(n_); //
 
               if(color == 0) {
@@ -180,7 +211,7 @@ public class Main {
                 setOne.add(n_);
               }
 
-              // If we now find a mismatch: return false
+              // If we now find a mismatch: (sub) graph is not bipartite -> return false
               if ((color == 0 && setOne.contains(n_)) || (color == 1 && setTwo.contains(n_))) {
                 return false;
               }
@@ -188,20 +219,17 @@ public class Main {
             }
           }
           // End of all neighbours
-          System.out.println( "--- Situation now: ---" );
+          /*System.out.println( "--- Situation now: ---" );
           System.out.println( setOne.toString() );
           System.out.println( setTwo.toString() );
           System.out.println( "--- >> ---" );
-
+          */
         }
 
         // Every node was checked and no same color neighbours was found
         return true;
 
       }
-
-
-
     }
 
 
@@ -249,9 +277,6 @@ public class Main {
     }
 
   }
-
-
-
 
 
 
