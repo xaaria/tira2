@@ -17,6 +17,7 @@ public class Algo1_4 {
     }
 
     final String filename = "src/" + args[0];
+    //final String filename = args[0]; // For WETO testing system
 
     Graph g = new Graph();
 
@@ -47,7 +48,7 @@ public class Algo1_4 {
 
     // Run
     g.isBipartite();
-    System.out.print("\n"); // program must end in a newline char
+
 
   }
 
@@ -135,6 +136,7 @@ public class Algo1_4 {
           for( Node n : white ) {
             System.out.print( " " + n.number );
           }
+          System.out.print("\n");
 
         } else {
           System.out.println(String.format("The graph has %d component(s)", this.components));
@@ -182,11 +184,12 @@ public class Algo1_4 {
         LinkedList<Node> q = new LinkedList<>();    // Queue of unchecked nodes
         HashSet<Node> discovered = new HashSet<>(); // Checked nodes
 
-        int color = 0;
+        int color = 1;
 
         // BEGIN:
 
-        q.add(root); // Add root node
+        q.add(root);      // Add root node
+        setOne.add(root); // Root is always color 0
 
         while(!q.isEmpty()) {
 
@@ -195,7 +198,7 @@ public class Algo1_4 {
           this.unchecked.remove(tn);  // global
 
           if( setOne.contains(tn) ) { color = 0; } else { color = 1; } // Get target node's color
-          //System.out.println( "Target Node: " + tn + " | color: " + color );
+          System.out.println( "Target Node: " + tn + " | color: " + color );
 
           if(color == 0) { setOne.add(tn); } else { setTwo.add(tn); } // add node itself to a colored set
 
@@ -204,20 +207,23 @@ public class Algo1_4 {
               discovered.add(n_);
               this.unchecked.remove(n_);
               q.add(n_); //
-
-              if(color == 0) {
-                setTwo.add(n_);
-              } else {
-                setOne.add(n_);
-              }
-
-              // If we now find a mismatch: (sub) graph is not bipartite -> return false
-              if ((color == 0 && setOne.contains(n_)) || (color == 1 && setTwo.contains(n_))) {
-                return false;
-              }
-
             }
+
+            // If we now find a mismatch: (sub) graph is not bipartite -> return false
+            if ((color == 0 && setOne.contains(n_)) || (color == 1 && setTwo.contains(n_))) {
+              return false;
+            }
+            if(color == 0) {
+              System.out.println("Add " + n_ + " to set color 1");
+              setTwo.add(n_);
+            } else {
+              System.out.println("Add " + n_ + " to color 0");
+              setOne.add(n_);
+            }
+
+
           }
+
           // End of all neighbours
           /*System.out.println( "--- Situation now: ---" );
           System.out.println( setOne.toString() );
