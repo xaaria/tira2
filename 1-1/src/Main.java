@@ -1,6 +1,7 @@
 import com.sun.deploy.util.ArrayUtil;
 import sun.awt.image.ImageWatched;
 
+import javax.sound.midi.SysexMessage;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -12,9 +13,11 @@ public class Main {
 
   public static void main(String[] args) throws IOException {
 
+    if(args.length == 0) {
+      return;
+    }
 
-    System.out.println("input1.txt");
-    final String filename = "src/input1.txt"; //args[1]; // might crash but never mind
+    final String filename = "src/" + args[0];
 
     Graph g = new Graph();
 
@@ -44,7 +47,7 @@ public class Main {
     }
 
     // Print graph structure
-    System.out.println( g.toString() );
+    //System.out.println( g.toString() );
     System.out.println( g.isBipartite() );
 
   }
@@ -54,9 +57,6 @@ public class Main {
   static class Graph {
 
     Map<Node, HashSet<Node>> nodes; // has vertices to these nodes
-
-
-
 
     public Graph() {
       this.nodes = new HashMap<>();
@@ -79,6 +79,13 @@ public class Main {
       return this.nodes.get(n).toArray(new Node[this.nodes.get(n).size()]);
     }
 
+
+    public boolean isBipartite() {
+      BipartiteGraph bg = new BipartiteGraph(this);
+      boolean r = bg.isBipartite();
+      bg.printResults();
+      return r;
+    }
 
 
     public int getNumberOfComponents() {
@@ -103,25 +110,49 @@ public class Main {
       }
 
       public void printResults() {
+
+        // Blue set contains the smallest node
+        ArrayList<Node> blue = new ArrayList<>( setOne );
+        ArrayList<Node> white = new ArrayList<>( setTwo );
+        Collections.sort(blue);
+        Collections.sort(white);
+
+        // switch if white has blue has bigger fist value
+        if(blue.get(0).number > white.get(0).number) {
+          ArrayList<Node> tmp = blue;
+          blue = white;
+          white = tmp;
+        }
+
         if(this.isBipartite()) {
-          System.out.println("The graph has x component(s)");
+          System.out.println(String.format("The graph has %d component(s)", getNumberOfComponents()));
           System.out.println("The graph is bipartite");
-          System.out.println(String.format("%s: ", SET_ONE) );
-          System.out.println(String.format("%s: ", SET_TWO) );
+
+          System.out.print(String.format("%s:", SET_ONE));
+          for( Node n : blue ) {
+            System.out.print( " " + n.number );
+          }
+          System.out.print("\n");
+          System.out.print(String.format("%s:", SET_TWO));
+          for( Node n : white ) {
+            System.out.print( " " + n.number );
+          }
         }
       }
 
 
-      // Note: does not clear sets
+
       public boolean isBipartite() {
 
         // Trivial check
         if(this.g_.nodes.size() <= 1) { return true; }
 
+        setOne.clear(); setTwo.clear();
+
         Node[] nodes = this.g_.nodes.keySet().toArray(new Node[this.g_.nodes.size()]); // order not defined
 
-        LinkedList<Node> q = new LinkedList<Node>();    // Queue of unchecked nodes
-        HashSet<Node> discovered = new HashSet<Node>(); // Checked nodes
+        LinkedList<Node> q = new LinkedList<>();    // Queue of unchecked nodes
+        HashSet<Node> discovered = new HashSet<>(); // Checked nodes
 
         int color = 0;
 
@@ -189,7 +220,7 @@ public class Main {
   }
 
 
-  static class Node {
+  static class Node implements Comparable<Node> {
 
     int number; // identifier
 
@@ -200,6 +231,11 @@ public class Main {
     @Override
     public String toString() {
       return String.format("<%d>", number);
+    }
+
+    @Override
+    public int compareTo(Node n) {
+      return this.number - ((Node) n).number;
     }
 
     @Override
