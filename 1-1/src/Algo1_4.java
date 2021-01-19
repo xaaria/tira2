@@ -4,7 +4,34 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
-
+/*
+* Data structures and alg. 2
+* ex 1.4
+* OP - 2021
+* ---
+* Your program is called with one command line parameter: the graph input filename.
+* ...where both u and v are non-negative integers.
+* Each line means that the graph contains an undirected edge between the nodes u and v. The nodes are not listed separately;
+* the list of nodes can be inferred from the list of edges (the graph contains only nodes that are attached to at least one edge).
+* Note that there is no guarantee that the graph is connected (= that each node can be reached from each other node).
+* The whole graph is bipartite if all of its separate components are bipartite. Therefore if the graph consists of
+* several separate components, you need to check each component separately. This is easy to do: keep track of which
+* nodes have not yet been processed (visited). If you first started the bipartiteness
+* check from some node p and at least some node q is still unprocessed after the check, nodes p and q are in different
+* component and you need to check the component of q separately (= redo the check but this time starting from q).
+* Repeat until no unprocessed nodes remain.
+*
+* Output description
+* Your program should first print out one line of form "The graph has x component(s)",
+* where x tells the number of separate connected components in the graph.
+* The next output line should be either "The graph is bipartite" or "The graph is not bipartite"
+* depending on whether the graph was found to be bipartite or not. If the graph is bipartite, the program prints out the
+* two different node sets of the graph as described below.
+* In order to make the program output unique (and hence easier for WETO to check),
+* the program must compose and output the two node sets of a bipartite graph in the following manner.
+* We call the overall resulting two node sets BLUE and WHITE.
+* ---
+* */
 public class Algo1_4 {
 
 
@@ -16,8 +43,12 @@ public class Algo1_4 {
       return;
     }
 
-    final String filename = "src/" + args[0];
-    //final String filename = args[0]; // For WETO testing system
+    String filename = args[0];
+
+    // is WETO testing env. 0 = false
+    if( args.length == 2 && args[1].equals("0") ) {
+      filename = "src/" + filename;
+    }
 
     Graph g = new Graph();
 
@@ -81,11 +112,7 @@ public class Algo1_4 {
     }
 
 
-
-    // inner class
     static class BipartiteGraph {
-
-      // TODO: add clear method that clears the state
 
       private Graph g_;
       private int components;
@@ -111,17 +138,11 @@ public class Algo1_4 {
       private boolean printResults() {
 
         // Blue set contains the smallest node
-        ArrayList<Node> blue = new ArrayList<>( setOne );
+        ArrayList<Node> blue  = new ArrayList<>( setOne );
         ArrayList<Node> white = new ArrayList<>( setTwo );
         Collections.sort(blue);
         Collections.sort(white);
 
-        // switch if white has blue has bigger fist value
-        if(blue.get(0).number > white.get(0).number) {
-          ArrayList<Node> tmp = blue;
-          blue = white;
-          white = tmp;
-        }
 
         if(isBipartite) {
           System.out.println(String.format("The graph has %d component(s)", this.components));
@@ -184,12 +205,16 @@ public class Algo1_4 {
         LinkedList<Node> q = new LinkedList<>();    // Queue of unchecked nodes
         HashSet<Node> discovered = new HashSet<>(); // Checked nodes
 
-        int color = 1;
+        // Local temp. sets
+        HashSet<Node> setOne_ = new HashSet<>();
+        HashSet<Node> setTwo_ = new HashSet<>();
+
+        int color = 0;
 
         // BEGIN:
 
-        q.add(root);      // Add root node
-        setOne.add(root); // Root is always color 0
+        q.add(root);        // Add root node
+        setOne_.add(root);  // Root is always color 0
 
         while(!q.isEmpty()) {
 
@@ -197,10 +222,10 @@ public class Algo1_4 {
           discovered.add(tn);         // local discovered
           this.unchecked.remove(tn);  // global
 
-          if( setOne.contains(tn) ) { color = 0; } else { color = 1; } // Get target node's color
-          System.out.println( "Target Node: " + tn + " | color: " + color );
+          if( setOne_.contains(tn) ) { color = 0; } else { color = 1; } // Get target node's color
+          //System.out.println( "Target Node: " + tn + " | color: " + color );
 
-          if(color == 0) { setOne.add(tn); } else { setTwo.add(tn); } // add node itself to a colored set
+          if(color == 0) { setOne_.add(tn); } else { setTwo_.add(tn); } // add node itself to a colored set
 
           for(Node n_ : this.g_.getNeighbours(tn)) {
             if(!discovered.contains(n_)) {
@@ -210,15 +235,15 @@ public class Algo1_4 {
             }
 
             // If we now find a mismatch: (sub) graph is not bipartite -> return false
-            if ((color == 0 && setOne.contains(n_)) || (color == 1 && setTwo.contains(n_))) {
+            if ((color == 0 && setOne_.contains(n_)) || (color == 1 && setTwo_.contains(n_))) {
               return false;
             }
             if(color == 0) {
-              System.out.println("Add " + n_ + " to set color 1");
-              setTwo.add(n_);
+              //System.out.println("Add " + n_ + " to set color 1");
+              setTwo_.add(n_);
             } else {
-              System.out.println("Add " + n_ + " to color 0");
-              setOne.add(n_);
+              //System.out.println("Add " + n_ + " to color 0");
+              setOne_.add(n_);
             }
 
 
@@ -233,6 +258,17 @@ public class Algo1_4 {
         }
 
         // Every node was checked and no same color neighbours was found
+        // Then merge local sets : Set that has smallest node ID, will be set one/blue
+        // Blue set contains the smallest node
+        // switch if white has blue has bigger fist value [note: why doesn't the compare work without .number?]
+        if( Collections.min(setOne_).number > Collections.min(setTwo_).number ) {
+          this.setOne.addAll( setTwo_ );
+          this.setTwo.addAll( setOne_ );
+        } else {
+          this.setOne.addAll( setOne_ );
+          this.setTwo.addAll( setTwo_ );
+        }
+
         return true;
 
       }
@@ -269,7 +305,7 @@ public class Algo1_4 {
 
     @Override
     public int compareTo(Node n) {
-      return this.number - ((Node) n).number;
+      return this.number - n.number;
     }
 
     @Override
