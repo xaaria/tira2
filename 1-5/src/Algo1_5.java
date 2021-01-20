@@ -212,7 +212,6 @@ public class Algo1_5 {
           components.put(root, component ); // note that root/key is also added to the set itself during the first call
 
           // For each neighbour, call recursively
-          System.out.println( g );
           for( Node n_ : g.getNeighbours(u) ) {
             assign(n_, root);
           }
