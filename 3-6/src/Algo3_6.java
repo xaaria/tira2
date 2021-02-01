@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,54 +51,65 @@ public class Algo3_6 {
 
 
   public static class ClosestPair {
-
     ArrayList<Point> points = new ArrayList<>(); // unordered
-
-    Point closest_1, closest_2 = null;
-
-    public ClosestPair() {
-    }
-
-
+    Point closest_1, closest_2 = null; // TODO
 
     public double closestPair() {
 
-      // Part 1 of the algorithm - sort points ASC
-      final ArrayList<Point> pointsByX = ((ArrayList<Point>) this.points.clone()).stream().sorted( (p1, p2) -> p1.x - p2.x ).collect(Collectors.toCollection(ArrayList::new));
-      final ArrayList<Point> pointsByY = ((ArrayList<Point>) this.points.clone()).stream().sorted( (p1, p2) -> p1.y - p2.y ).collect(Collectors.toCollection(ArrayList::new));
+      // Part 1 of the algorithm - sort points ASC by X and Y
+      final ArrayList<Point> pointsByX = ((ArrayList<Point>) this.points.clone()).stream().sorted(Comparator.comparingInt(p -> p.x)).collect(Collectors.toCollection(ArrayList::new));
+      final ArrayList<Point> pointsByY = ((ArrayList<Point>) this.points.clone()).stream().sorted(Comparator.comparingInt(p -> p.y)).collect(Collectors.toCollection(ArrayList::new));
 
-      // give rank for each in x (??)
+      // give rank for each in x
       int rank = 1;
       for(Point p : pointsByX) {
         p.rank = rank++;
       }
 
-      return closestPairRecursive(pointsByX, pointsByY, 1, points.size()); // end is exclusive, so no -1 there
+      return closestPairRecursive(pointsByX, pointsByY, 1, pointsByX.size()); // end is exclusive, so no -1 there
     }
 
-    public double closestPairRecursive(final ArrayList<Point> pointsX, final ArrayList<Point> pointsY, final int start, final int end) {
+    // start end end NOT zero based
+    private double closestPairRecursive(final ArrayList<Point> pointsX, final ArrayList<Point> pointsY, final int start, final int end) {
 
-      //
-      print(String.format("Current subset %d...%d has %d points:", start, end, pointsX.size()), false );
-      Point.printPoints(pointsX); // (x,y) (x,y)
-      //
+      // ---
+      final ArrayList<Point> pointsX_clone = new ArrayList<>(pointsX.subList(start-1, end));
+
+      // Print out details of current run
+      print(String.format("Current subset %d...%d has %d points:", start, end, pointsX_clone.size()), false );
+      Point.printPoints(pointsX_clone);
+      // ---
+
 
       double d = Double.POSITIVE_INFINITY;
 
       if(start < end) {
-        
-        int mid = (start+end)/2;
 
-        ArrayList<Point> subListX = new ArrayList<>(pointsX.subList(start-1, end));
-        // x-array is cut into [start, end] (inclusive)
-        double d1 = closestPairRecursive(subListX, pointsY, start, mid);
-        double d2 = closestPairRecursive(subListX, pointsY, mid+1, end);
+        // First, cut X arr from X[start..end] = [start-1, end[
+
+        //print(String.format("\t[%d..%d[ size: %d", start, end, pointsX.size()), true);
+        /*
+        final ArrayList<Point> pointsX_clone = new ArrayList<>(pointsX.subList(start-1, end));   // replace content instead of new?
+
+        // Print out details of current run
+        print(String.format("Current subset %d...%d has %d points:", start, end, pointsX_clone.size()), false );
+        Point.printPoints(pointsX_clone);
+
+         */
+
+
+        final int mid = (start+end) / 2;
+        double d1 = closestPairRecursive(pointsX_clone, pointsY, start, mid);
+        double d2 = closestPairRecursive(pointsX_clone, pointsY, mid+1, end);
 
         d = Math.min(d1, d2);
-        final double d_ = d; // for the lambda...
-        double l = (pointsX.get(mid).x + pointsX.get(mid+1).x) / 2.0; // middle x coord. l=line
+        //final double d_ = d; // final for the lambda...
+
+        // Calculate the center line L
+        int l = (pointsX_clone.get(mid-1).x + pointsX_clone.get(mid).x) / 2;
 
         // "take a point in y_arr into 2d-strip only if it is inside start...end in x_arr"
+        /*
         final ArrayList<Point> strip = pointsY.stream().filter( (p) -> p.rank >= start && p.rank <= end && ( Math.abs(p.x - l) <= d_ ) ).collect(Collectors.toCollection(ArrayList::new ));
         strip.sort( (p1, p2) -> (p1.y != p2.y) ? p1.y - p2.y : p1.x - p2.x ); //  primarily by y- and secondarily by x-coordinates. (!!!)
 
@@ -107,10 +119,10 @@ public class Algo3_6 {
 
 
         for(Point p : strip) {
-          // compute distance from strip[i] to (at most) 7 following points. pi is the index to check
+          // Compute distance from strip[i] to (at most) 7 following points.
+          // pi is the index on p. Calculate to [pi+1 ... size/pi+7]
           for(int pi = strip.indexOf(p)+1; pi < Math.min(strip.size(), pi+8); pi++) {
             //print( "check @ " + pi, true );
-
             // If new closer pair found (smaller than current dist.)
             if( p.getDistance(strip.get(pi)) < d ) {
               closest_1 = p; closest_2 = strip.get(pi);
@@ -118,11 +130,11 @@ public class Algo3_6 {
             }
           }
         }
-
+        */
       }
 
-      final String dist = (d == Double.POSITIVE_INFINITY) ? "infinity" : String.format("%.3f", d);
-      print(String.format("Current subset %d...%d returns distance: %s", start, end, dist), true); // 'infinity' if no change
+      final String dist = (d == Double.POSITIVE_INFINITY) ? "infinity" : String.format("%.3f", d); // 'infinity' if no change
+      print(String.format("Current subset %d...%d returns distance: <WIP> %s", start, end, dist), true);
       return d;
 
     }
