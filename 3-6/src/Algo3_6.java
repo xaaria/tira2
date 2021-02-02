@@ -40,6 +40,11 @@ public class Algo3_6 {
 
     // --- Run the algorithm ---
     double dist = cp.closestPair();
+
+    if(args.length == 2 && args[1].equals("0") ){
+      cp.print(cp.closest.toString(), true);
+    }
+
     TreeSet<Point> smallest = cp.closest.stream().min( (s1, s2) -> s1.first().x - s2.first().x ).get();
     cp.print(String.format(Locale.US, "Closest points: %s %s with distance %.3f", smallest.first(), smallest.last(), dist), true);
 
@@ -109,11 +114,11 @@ public class Algo3_6 {
           // Compute distance from strip[i] to (at most) 7 following points.
           for(int pi = strip.indexOf(p)+1; pi < Math.min(strip.size(), pi+8); pi++) {
             // If new closer pair found. Notice that equal distance is also added!
-            final double dist = p.getDistance(strip.get(pi));
+            double dist = p.getDistance(strip.get(pi));
             if( dist <= d ) {
 
               // If smaller than [but not equal!], we can empty closest pairs found so far
-              if(dist < d) { this.closest.clear(); }
+              //if(dist < d) { this.closest.clear(); }
 
               // Make a new pair as TreeSet. add it to the set nearest points
               final TreeSet<Point> closestPair = new TreeSet<>();
