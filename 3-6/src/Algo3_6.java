@@ -12,9 +12,7 @@ public class Algo3_6 {
 
   public static void main(String[] args) {
 
-    Test.test();
-
-
+    //Test.test();
 
     if(args.length == 0) {
       System.out.print("Filename is missing!");
@@ -34,7 +32,7 @@ public class Algo3_6 {
       BufferedReader br = new BufferedReader(new FileReader(filename));
       // Read each line
       for (String line = br.readLine(); line != null; line = br.readLine()) {
-        System.out.print(line + "\n");
+        //System.out.print(line + "\n");
         String[] line_ = line.split(" "); // [x, y]
 
         cp.addPoint( new Point( Integer.parseInt(line_[0]), Integer.parseInt(line_[1]) ) );
