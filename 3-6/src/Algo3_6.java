@@ -43,9 +43,10 @@ public class Algo3_6 {
 
     if(args.length == 2 && args[1].equals("0") ){
       cp.print(cp.closest.toString(), true);
+      //cp.print( cp.bestPair.toString(), true );
     }
 
-    TreeSet<Point> smallest = cp.closest.stream().min( (s1, s2) -> s1.first().x - s2.first().x ).get();
+    TreeSet<Point> smallest = cp.closest.stream().min( (s1, s2) -> s1.first().x != s2.first().x ? s1.first().y - s2.first().y : s1.first().x - s2.first().x ).get();
     cp.print(String.format(Locale.US, "Closest points: %s %s with distance %.3f", smallest.first(), smallest.last(), dist), true);
 
   }
@@ -54,6 +55,7 @@ public class Algo3_6 {
   public static class ClosestPair {
     ArrayList<Point> points = new ArrayList<>(); // unordered
     HashSet<TreeSet<Point>> closest = new HashSet<>();
+    double smallestDistance = Double.POSITIVE_INFINITY; // the global smallest distance found so far
 
     public double closestPair() {
 
@@ -112,21 +114,34 @@ public class Algo3_6 {
 
         for(final Point p : strip) {
           // Compute distance from strip[i] to (at most) 7 following points.
+          //this.print( String.format("%s", p), true);
           for(int pi = strip.indexOf(p)+1; pi < Math.min(strip.size(), pi+8); pi++) {
             // If new closer pair found. Notice that equal distance is also added!
-            double dist = p.getDistance(strip.get(pi));
+            final Point p2 =  strip.get(pi);
+            double dist = p.getDistance(p2);
+
             if( dist <= d ) {
 
               // If smaller than [but not equal!], we can empty closest pairs found so far
-              //if(dist < d) { this.closest.clear(); }
+              if(dist < this.smallestDistance) {
+                /*System.out.println(p.toString() + p2.toString());
+                System.out.println(dist + " < " + this.smallestDistance);
+                System.out.println("Empty --> " + this.closest.toString());
 
-              // Make a new pair as TreeSet. add it to the set nearest points
-              final TreeSet<Point> closestPair = new TreeSet<>();
-              closestPair.add(p);
-              closestPair.add(strip.get(pi));
-              this.closest.add(closestPair);
+                 */
+                this.closest.clear();
+
+                this.smallestDistance = dist;
+
+                // Make a new pair as TreeSet. add it to the set nearest points
+                final TreeSet<Point> closestPair = new TreeSet<>();
+                closestPair.add(p);
+                closestPair.add(strip.get(pi));
+                this.closest.add(closestPair);
+              }
 
               d = dist;
+
             }
           }
         }
