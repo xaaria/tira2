@@ -130,8 +130,11 @@ public class Algo4_4 {
         final int negIndex = isNegativeCycleDetected(dist);
         if( negIndex != -1) {
           Node uv = nodes.get(negIndex); // get node from [i,i]
-          System.out.println("A negative cycle detected: " + negIndex + uv);
-          System.out.println( getCycle(uv, uv, next, nodes) );
+          System.out.print("A negative cycle detected:" );
+          for(Node n : this.getCycle(uv, uv, next, nodes)) {
+            System.out.print(" " + n);
+          }
+          System.out.print("\n");
           return; // if neg. cycle ... the computation will be stopped after the iteration has ended.
         }
         // otherwise continue
@@ -151,13 +154,14 @@ public class Algo4_4 {
       }
       cycle.add(u); // root
 
-      u = next[nodes.indexOf(u)][nodes.indexOf(v)];
-      cycle.add(u);
+      //u = next[nodes.indexOf(u)][nodes.indexOf(v)];
+      //cycle.add(u);
 
-      while(! u.equals(v) ) {
+      do {
         u = next[ nodes.indexOf(u) ][ nodes.indexOf(v) ];
         cycle.add(u);
-      }
+      } while((! u.equals(v) ));
+
       return cycle;
 
     }
@@ -247,7 +251,7 @@ public class Algo4_4 {
 
     @Override
     public String toString() {
-      return String.format("<%d>", number);
+      return String.format("%d", number);
     }
 
     @Override
