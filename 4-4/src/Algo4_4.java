@@ -72,17 +72,17 @@ public class Algo4_4 {
 
     public void floydWarshall() {
 
-      final ArrayList<Node> nodes = new ArrayList<>(this.nodes);
-      final Double[][] dist = new Double[nodes.size()][nodes.size()];
-      final Node[][] next = new Node[nodes.size()][nodes.size()];
+      final ArrayList<Node> nodes = new ArrayList<>(this.nodes); // sorted!
+      final Double[][]  dist    = new Double[nodes.size()][nodes.size()];
+      final Node[][]    next    = new Node[nodes.size()][nodes.size()];
 
       // Init dist to INF
-      for(final Double[] arr1 : dist) {
+      for(Double[] arr1 : dist) {
         Arrays.fill(arr1, Double.POSITIVE_INFINITY);
       }
 
-      for(final Node[] arr1 : next) {
-        Arrays.fill(arr1, null);
+      for(Node[] arr2 : next) {
+        Arrays.fill(arr2, null);
       }
 
 
@@ -95,8 +95,8 @@ public class Algo4_4 {
       }
 
       // For each Node n set distance to n->n to 0
-      for(Node n : this.nodes) {
-        final int i =  nodes.indexOf(n);
+      for(Node n : nodes) {
+        final int i = nodes.indexOf(n);
         dist[i][i] = (double) 0; // for example [Node 3][Node 3] = 0
         next[i][i] = n;   // (2) next[v][v] ← v
       }
@@ -104,53 +104,58 @@ public class Algo4_4 {
       // Step 3 - Init. done.
       int iterNum = 0;
 
-      // TODO: Print the initial state as iteration k=0
+      // Print initial status (aka k=0)
       this.printMatrix(dist, iterNum);
 
-      // Iterations k...size
-      for(final Node k : this.nodes) {
-        for(final Node i : this.nodes) {
-          for(final Node j : this.nodes) {
-            final int index_k = nodes.indexOf(k);
-            final int index_i = nodes.indexOf(i);
+      // Iterations k = 1...size
+      for(final Node k : nodes) {
+        final int index_k = nodes.indexOf(k);
+        for(final Node i : nodes) {
+          final int index_i = nodes.indexOf(i);
+          for(final Node j : nodes) {
             final int index_j = nodes.indexOf(j);
 
             if( dist[index_i][index_j] > dist[index_i][index_k] + dist[index_k][index_j] ) {
               dist[index_i][index_j] = dist[index_i][index_k] + dist[index_k][index_j];
+              // Construct the next-matrix
+              next[index_i][index_j] = next[index_i][index_k];
             }
-
-            //
-
-
           }
         }
+
         iterNum++;
         this.printMatrix(dist, iterNum);
+
+        // Negative cycles found?
         final int negIndex = isNegativeCycleDetected(dist);
         if( negIndex != -1) {
-          final Node uv = nodes.get(negIndex);
+          Node uv = nodes.get(negIndex); // get node from [i,i]
           System.out.println("A negative cycle detected: " + negIndex + uv);
           System.out.println( getCycle(uv, uv, next, nodes) );
           return; // if neg. cycle ... the computation will be stopped after the iteration has ended.
         }
-      }
+        // otherwise continue
+
+      } // main
+
 
     }
 
 
     private ArrayList<Node> getCycle(Node u, Node v, final Node[][] next, final ArrayList<Node> nodes) {
-
       ArrayList<Node> cycle = new ArrayList<>();
-      final int i = nodes.indexOf(u); // row
-      final int j = i; // the same as i
 
-      if(next[i][j] == null) {
-        return cycle; // empty
+
+      if( next[nodes.indexOf(u)][nodes.indexOf(v)] == null ) {
+        return cycle; // []
       }
       cycle.add(u); // root
 
-      while(u != v) {
-        u = next[ nodes.indexOf(u) ][j]; // j already calculated
+      u = next[nodes.indexOf(u)][nodes.indexOf(v)];
+      cycle.add(u);
+
+      while(! u.equals(v) ) {
+        u = next[ nodes.indexOf(u) ][ nodes.indexOf(v) ];
         cycle.add(u);
       }
       return cycle;
@@ -252,6 +257,7 @@ public class Algo4_4 {
 
     @Override
     public boolean equals(Object o) {
+      if(!(o instanceof Node)) { return false; }
       return ((Node) o).number == this.number;
     }
 
